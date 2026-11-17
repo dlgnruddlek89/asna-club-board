@@ -1,0 +1,29 @@
+{
+  "name": "club-recruitment-board",
+  "version": "1.0.0",
+  "description": "대학 동아리 모집 게시판 서비스 (PRD 기반)",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "node test/verify.js"
+  },
+  "keywords": [
+    "club",
+    "recruitment",
+    "express",
+    "sqlite",
+    "render"
+  ],
+  "author": "AI Software",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

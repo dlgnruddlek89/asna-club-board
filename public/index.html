@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>한국폴리텍 아산캠퍼스 | 동아리 모집 게시판</title>
+  <meta name="description" content="한눈에 둘러보고 클릭 한 번으로 간편하게 지원하는 대학 동아리 모집 플랫폼">
+  <!-- Pretendard Web Font -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- 최상단 헤더 네비게이션 -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand" id="btnLogo">
+        <div class="brand-logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">CAMPUS CLUBS</span>
+          <span class="brand-subtitle">한국폴리텍 아산캠퍼스 동아리 모집게시판</span>
+        </div>
+      </div>
+
+      <nav class="nav-actions">
+        <!-- 비로그인 상태일 때 표시 -->
+        <div id="guestNav" class="nav-group">
+          <button id="btnOpenLoginModal" class="btn btn-outline">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            조장 로그인
+          </button>
+          <button id="btnOpenSignupModal" class="btn btn-secondary">
+            가입코드 가입
+          </button>
+        </div>
+
+        <!-- 로그인 상태일 때 표시 (조장) -->
+        <div id="leaderNav" class="nav-group" style="display: none;">
+          <div class="user-badge">
+            <span class="leader-badge-pill">조장</span>
+            <span id="navLeaderName" class="user-name">이후경</span>
+          </div>
+          <button id="btnOpenCreatePost" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            동아리 등록
+          </button>
+          <button id="btnLogout" class="btn btn-ghost" title="로그아웃">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 메인 히어로 & 슬라이더 영역 -->
+  <main class="main-content">
+    <section class="hero-section">
+      <div class="hero-header">
+        <span class="hero-tag">🔥 2026 동아리 신입 부원 대모집</span>
+        <h1 class="hero-title">나에게 딱 맞는 캠퍼스 동아리를 찾아보세요</h1>
+        <p class="hero-desc">카드를 좌우로 넘겨보고, 마음에 드는 동아리에 10초 만에 간편 지원하세요!</p>
+      </div>
+
+      <!-- PRD 핵심: "카드를 약 70% 크기로 보여주고 좌우로 넘긴다" (카드 슬라이더) -->
+      <div class="slider-wrapper">
+        <button id="sliderPrevBtn" class="slider-arrow slider-arrow-prev" aria-label="이전 동아리 보기">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+
+        <div class="slider-stage-container" id="sliderStageContainer">
+          <div class="slider-track" id="sliderTrack">
+            <!-- 동아리 카드들이 자바스크립트로 동적 렌더링됩니다 -->
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>동아리 목록을 불러오는 중...</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="sliderNextBtn" class="slider-arrow slider-arrow-next" aria-label="다음 동아리 보기">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+      <!-- 슬라이더 도트 인디케이터 및 슬라이드 카운터 -->
+      <div class="slider-footer">
+        <div class="slider-dots" id="sliderDots"></div>
+        <div class="slider-counter" id="sliderCounter">0 / 0</div>
+      </div>
+    </section>
+
+    <!-- 빠른 특징 안내 바 -->
+    <section class="features-bar">
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-info">
+          <h4>로그인 없는 간편 지원</h4>
+          <p>학생은 회원가입 없이 한 화면에서 즉시 지원 완료</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-info">
+          <h4>원스톱 동아리 탐색</h4>
+          <p>포스터, 소개글, 활동 내용, 회원 정보를 클릭 한 번에</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🛡️</div>
+        <div class="feature-info">
+          <h4>검증된 조장 관리</h4>
+          <p>가입 코드 인증 조장만 공고 등록 및 지원자 승인/마감</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== 모달 영역 ==================== -->
+
+  <!-- 1. 동아리 상세 모달 (소개글, 활동내용, 회원 목록, 지원/관리 버튼) -->
+  <div id="detailModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-lg">
+      <button class="modal-close-btn" data-close-modal>&times;</button>
+      
+      <div class="detail-layout">
+        <!-- 좌측 포스터 영역 -->
+        <div class="detail-poster-wrap">
+          <img id="detailPosterImg" src="" alt="동아리 포스터" class="detail-poster-img" onerror="this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800'">
+          <div class="detail-poster-badges">
+            <span id="detailCategory" class="badge badge-category">IT/개발</span>
+            <span id="detailStatus" class="badge badge-status">모집중</span>
+          </div>
+        </div>
+
+        <!-- 우측 상세 정보 영역 -->
+        <div class="detail-info-wrap">
+          <div class="detail-header">
+            <div class="detail-sub-meta">
+              <span id="detailLeader" class="detail-leader-name">조장: 이후경</span>
+              <span id="detailAppCount" class="detail-applicant-count">현재 지원자 0명</span>
+            </div>
+            <h2 id="detailTitle" class="detail-title">코드 크래프트</h2>
+            <p id="detailSummary" class="detail-summary">동아리 한줄 요약 소개글</p>
+          </div>
+
+          <div class="detail-body">
+            <!-- 탭 또는 구획 분리 -->
+            <div class="detail-section">
+              <h3 class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                동아리 소개
+              </h3>
+              <p id="detailIntro" class="section-content text-preserve"></p>
+            </div>
+
+            <div class="detail-section">
+              <h3 class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                주요 활동 내용
+              </h3>
+              <p id="detailActivities" class="section-content text-preserve"></p>
+            </div>
+
+            <div class="detail-section">
+              <h3 class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                동아리 회원 이름 (구성원)
+              </h3>
+              <p id="detailMembers" class="section-content members-tag-list"></p>
+            </div>
+          </div>
+
+          <!-- 하단 액션 버튼 바 -->
+          <div class="detail-actions">
+            <!-- 일반 학생용 지원 버튼 -->
+            <button id="btnOpenApplyForm" class="btn btn-primary btn-lg btn-block">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              <span>지원 신청하기</span>
+            </button>
+
+            <!-- 해당 동아리 조장 전용 관리 도구 -->
+            <div id="leaderDetailControls" class="leader-controls-box" style="display: none;">
+              <div class="leader-controls-label">
+                <span>👑 해당 동아리 조장 관리 메뉴</span>
+              </div>
+              <div class="leader-controls-buttons">
+                <button id="btnViewApplications" class="btn btn-secondary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+                  지원자 명단 관리 (<span id="leaderPendingBadge">0</span>)
+                </button>
+                <button id="btnToggleClosePost" class="btn btn-outline">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                  <span id="closeToggleText">모집 마감</span>
+                </button>
+                <button id="btnDeletePost" class="btn btn-danger-outline">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  삭제
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 지원 신청 양식 모달 (학생용) -->
+  <div id="applyModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-sm">
+      <button class="modal-close-btn" data-close-modal>&times;</button>
+      <div class="modal-header">
+        <span class="modal-eyebrow" id="applyClubName">동아리명</span>
+        <h3 class="modal-title">동아리 지원서 작성</h3>
+        <p class="modal-subtext">회원가입 없이 즉시 제출할 수 있습니다.</p>
+      </div>
+
+      <form id="applyForm" class="modal-form">
+        <div class="form-group">
+          <label for="applyDept" class="form-label">학과 <span class="required">*</span></label>
+          <input type="text" id="applyDept" class="form-input" placeholder="예: AI소프트웨어과" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-half">
+            <label for="applyGrade" class="form-label">학년 <span class="required">*</span></label>
+            <select id="applyGrade" class="form-select" required>
+              <option value="1학년" selected>1학년</option>
+              <option value="2학년">2학년</option>
+              <option value="3학년">3학년</option>
+              <option value="4학년">4학년</option>
+            </select>
+          </div>
+          <div class="form-group col-half">
+            <label for="applyName" class="form-label">이름 <span class="required">*</span></label>
+            <input type="text" id="applyName" class="form-input" placeholder="예: 홍길동" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="applyStudentId" class="form-label">학번 <span class="required">*</span></label>
+          <input type="text" id="applyStudentId" class="form-input" placeholder="예: 202611001" required>
+        </div>
+
+        <div class="form-group">
+          <label for="applyMessage" class="form-label">지원 동기 및 각오 (선택)</label>
+          <textarea id="applyMessage" class="form-textarea" rows="3" placeholder="지원하게 된 계기나 하고 싶은 활동을 간단히 적어주세요."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close-modal>취소</button>
+          <button type="submit" id="btnSubmitApply" class="btn btn-primary btn-block">지원서 제출하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. 지원자 관리 모달 (조장 전용: 목록 열람 및 승인/거절) -->
+  <div id="applicationsModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-md">
+      <button class="modal-close-btn" data-close-modal>&times;</button>
+      <div class="modal-header">
+        <span class="modal-eyebrow" id="appManageClubName">동아리명</span>
+        <h3 class="modal-title">지원자 명단 및 심사</h3>
+        <p class="modal-subtext">조장님만 확인할 수 있는 지원자 목록입니다. 승인 또는 거절을 처리하세요.</p>
+      </div>
+
+      <div class="applicant-filter-bar">
+        <button class="filter-tab active" data-filter="all">전체 (<span id="countAll">0</span>)</button>
+        <button class="filter-tab" data-filter="대기">대기 (<span id="countPending">0</span>)</button>
+        <button class="filter-tab" data-filter="승인">승인 (<span id="countApproved">0</span>)</button>
+        <button class="filter-tab" data-filter="거절">거절 (<span id="countRejected">0</span>)</button>
+      </div>
+
+      <div class="applicant-list-container" id="applicantList">
+        <!-- 지원자 목록 아이템들이 렌더링됩니다 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 조장 회원가입 모달 (가입 코드 필수) -->
+  <div id="signupModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-sm">
+      <button class="modal-close-btn" data-close-modal>&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        </div>
+        <h3 class="modal-title">동아리 조장 회원가입</h3>
+        <p class="modal-subtext">가입 코드를 아는 조장님만 회원가입할 수 있습니다.</p>
+      </div>
+
+      <form id="signupForm" class="modal-form">
+        <div class="form-group code-input-group">
+          <label for="signupInviteCode" class="form-label">
+            가입 코드 <span class="required">*</span>
+            <span class="label-hint">(기본: <code>CLUB2026!</code>)</span>
+          </label>
+          <input type="text" id="signupInviteCode" class="form-input" placeholder="조장 가입 코드를 입력하세요" required>
+        </div>
+
+        <div class="form-group">
+          <label for="signupUsername" class="form-label">아이디 <span class="required">*</span></label>
+          <input type="text" id="signupUsername" class="form-input" placeholder="영문/숫자 아이디" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="signupName" class="form-label">이름 / 직책 <span class="required">*</span></label>
+          <input type="text" id="signupName" class="form-input" placeholder="예: 이후경 조장" required>
+        </div>
+
+        <div class="form-group">
+          <label for="signupPassword" class="form-label">비밀번호 <span class="required">*</span></label>
+          <input type="password" id="signupPassword" class="form-input" placeholder="비밀번호를 입력하세요" required autocomplete="new-password">
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-block">조장 계정 생성</button>
+        </div>
+
+        <div class="form-switch">
+          이미 조장 계정이 있으신가요? <a href="#" id="linkToLogin">로그인하기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. 조장 로그인 모달 -->
+  <div id="loginModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-sm">
+      <button class="modal-close-btn" data-close-modal>&times;</button>
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        </div>
+        <h3 class="modal-title">동아리 조장 로그인</h3>
+        <p class="modal-subtext">등록한 동아리를 관리하고 지원자를 확인하세요.</p>
+      </div>
+
+      <form id="loginForm" class="modal-form">
+        <div class="form-group">
+          <label for="loginUsername" class="form-label">아이디</label>
+          <input type="text" id="loginUsername" class="form-input" placeholder="아이디를 입력하세요" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword" class="form-label">비밀번호</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="비밀번호를 입력하세요" required autocomplete="current-password">
+        </div>
+
+        <div class="demo-account-hint">
+          <span>💡 테스트 계정: <strong>leader1</strong> / <strong>1234</strong></span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-block">로그인</button>
+        </div>
+
+        <div class="form-switch">
+          아직 조장 계정이 없으신가요? <a href="#" id="linkToSignup">가입코드로 가입하기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. 동아리 등록 모달 (조장 전용) -->
+  <div id="createPostModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card modal-md">
+      <button class="modal-close-btn" data-close-modal>&times;</button>
+      <div class="modal-header">
+        <span class="modal-eyebrow">빠른 등록 (5분 완성)</span>
+        <h3 class="modal-title">새로운 동아리 모집 공고 등록</h3>
+        <p class="modal-subtext">학생들이 둘러볼 매력적인 동아리 정보를 작성해주세요.</p>
+      </div>
+
+      <form id="createPostForm" class="modal-form">
+        <div class="form-row">
+          <div class="form-group col-70">
+            <label for="newClubName" class="form-label">동아리 이름 <span class="required">*</span></label>
+            <input type="text" id="newClubName" class="form-input" placeholder="예: 코드 크래프트 (Code Craft)" required>
+          </div>
+          <div class="form-group col-30">
+            <label for="newCategory" class="form-label">분야/카테고리</label>
+            <select id="newCategory" class="form-select">
+              <option value="IT / 개발">IT / 개발</option>
+              <option value="학술 / 스터디">학술 / 스터디</option>
+              <option value="음악 / 밴드">음악 / 밴드</option>
+              <option value="공연 / 예술">공연 / 예술</option>
+              <option value="사진 / 영상">사진 / 영상</option>
+              <option value="체육 / 스포츠">체육 / 스포츠</option>
+              <option value="봉사 / 친목">봉사 / 친목</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 포스터 URL 및 샘플 선택기 -->
+        <div class="form-group">
+          <label for="newPosterUrl" class="form-label">포스터 이미지 URL <span class="required">*</span></label>
+          <div class="input-with-button">
+            <input type="url" id="newPosterUrl" class="form-input" placeholder="https://... 이미지 웹 주소 입력" required>
+            <button type="button" id="btnPreviewPoster" class="btn btn-outline btn-sm">미리보기</button>
+          </div>
+          <!-- 빠른 샘플 이미지 선택기 -->
+          <div class="sample-preset-row">
+            <span class="sample-label">추천 샘플:</span>
+            <button type="button" class="btn-sample-tag" data-url="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1000&auto=format&fit=crop&q=80">💻 IT개발</button>
+            <button type="button" class="btn-sample-tag" data-url="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&auto=format&fit=crop&q=80">🎸 밴드음악</button>
+            <button type="button" class="btn-sample-tag" data-url="https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=1000&auto=format&fit=crop&q=80">📷 사진영상</button>
+            <button type="button" class="btn-sample-tag" data-url="https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1000&auto=format&fit=crop&q=80">🏀 스포츠</button>
+          </div>
+          <!-- 이미지 미리보기 박스 -->
+          <div id="posterPreviewContainer" class="poster-preview-box" style="display: none;">
+            <img id="posterPreviewImg" src="" alt="포스터 미리보기">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="newSummary" class="form-label">한 줄 요약 (카드 표시용)</label>
+          <input type="text" id="newSummary" class="form-input" placeholder="카드의 앞면에 표시될 매력적인 한마디를 적어주세요.">
+        </div>
+
+        <div class="form-group">
+          <label for="newIntro" class="form-label">동아리 소개글 <span class="required">*</span></label>
+          <textarea id="newIntro" class="form-textarea" rows="3" placeholder="동아리의 설립 목적, 분위기, 모집 대상 등을 적어주세요." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="newActivities" class="form-label">주요 활동 내용 <span class="required">*</span></label>
+          <textarea id="newActivities" class="form-textarea" rows="3" placeholder="• 주 1회 정기 모임 및 스터디&#10;• 방학 프로젝트 및 해커톤 참가" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="newMembers" class="form-label">회원 이름 (구성원) <span class="required">*</span></label>
+          <input type="text" id="newMembers" class="form-input" placeholder="예: 이후경(회장), 박지훈, 김민서, 최수아" required>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close-modal>취소</button>
+          <button type="submit" id="btnSubmitCreatePost" class="btn btn-primary btn-block">동아리 모집 공고 등록하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 토스트 알림창 컨테이너 -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="footer-title">한국폴리텍 아산캠퍼스 동아리 모집게시판</p>
+      <p class="footer-sub">Node.js · Express · SQLite · JWT · Render</p>
+    </div>
+  </footer>
+
+  <!-- 스크립트 로드 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/slider.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

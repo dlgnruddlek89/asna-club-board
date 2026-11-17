@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: club-recruitment-board
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SIGNUP_INVITE_CODE
+        value: CLUB2026!
+      - key: SUPABASE_URL
+        value: https://yoazuudwhdyagqzdmjaf.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvYXp1dWR3aGR5YWdxemRtamFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM2NzMxMzQsImV4cCI6MjEwOTI0OTEzNH0.m9FcYApmCY0iQqEMZ65Aj8IbTt_eb2nhJiUWF_JN3ak
