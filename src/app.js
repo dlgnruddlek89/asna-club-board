@@ -42,10 +42,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: '서버 내부 오류가 발생했습니다.' });
 });
 
-app.listen(config.port, '0.0.0.0', () => {
-  console.log(`=========================================`);
-  console.log(`🚀 동아리 모집 게시판 서버가 실행되었습니다!`);
-  console.log(`📍 주소: http://localhost:${config.port}`);
-  console.log(`🔑 조장 가입 코드: ${config.signupInviteCode}`);
-  console.log(`=========================================`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(config.port, '0.0.0.0', () => {
+    console.log(`=========================================`);
+    console.log(`🚀 동아리 모집 게시판 서버가 실행되었습니다!`);
+    console.log(`📍 주소: http://localhost:${config.port}`);
+    console.log(`🔑 조장 가입 코드: ${config.signupInviteCode}`);
+    console.log(`=========================================`);
+  });
+}
+
+module.exports = app;
