@@ -27,6 +27,82 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupModal = document.getElementById('signupModal');
   const loginModal = document.getElementById('loginModal');
   const createPostModal = document.getElementById('createPostModal');
+  const photoLightboxModal = document.getElementById('photoLightboxModal');
+  const lightboxImg = document.getElementById('lightboxImg');
+
+  // 포스터 패닝 인터랙션 변수
+  const detailPosterWrap = document.getElementById('detailPosterWrap');
+  const posterPanContainer = document.getElementById('posterPanContainer');
+  const detailPosterImg = document.getElementById('detailPosterImg');
+  const btnFitPoster = document.getElementById('btnFitPoster');
+  const btnResetPoster = document.getElementById('btnResetPoster');
+
+  let isPosterPanning = false;
+  let panStartX = 0;
+  let panStartY = 0;
+  let currentPanX = 0;
+  let currentPanY = 0;
+  let posterScale = 1.15; // 기본 넉넉한 스케일로 잘린 부분 마우스 탐색 용이
+
+  function applyPosterTransform() {
+    if (detailPosterWrap.classList.contains('fit-mode')) {
+      detailPosterImg.style.transform = 'none';
+      return;
+    }
+    detailPosterImg.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${posterScale})`;
+  }
+
+  function resetPosterPan() {
+    currentPanX = 0;
+    currentPanY = 0;
+    posterScale = 1.15;
+    detailPosterWrap.classList.remove('fit-mode');
+    btnFitPoster.classList.remove('active');
+    btnResetPoster.classList.add('active');
+    applyPosterTransform();
+  }
+
+  // 포스터 마우스 드래그 이벤트 (Pan)
+  posterPanContainer.addEventListener('mousedown', (e) => {
+    if (detailPosterWrap.classList.contains('fit-mode')) return;
+    isPosterPanning = true;
+    panStartX = e.clientX - currentPanX;
+    panStartY = e.clientY - currentPanY;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isPosterPanning) return;
+    currentPanX = e.clientX - panStartX;
+    currentPanY = e.clientY - panStartY;
+    applyPosterTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    isPosterPanning = false;
+  });
+
+  // 포스터 휠 확대/축소
+  posterPanContainer.addEventListener('wheel', (e) => {
+    if (detailPosterWrap.classList.contains('fit-mode')) return;
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 0.08 : -0.08;
+    posterScale = Math.min(Math.max(0.8, posterScale + zoomFactor), 3.0);
+    applyPosterTransform();
+  }, { passive: false });
+
+  // 전체보기(Fit) 버튼
+  btnFitPoster.addEventListener('click', (e) => {
+    e.stopPropagation();
+    detailPosterWrap.classList.add('fit-mode');
+    btnFitPoster.classList.add('active');
+    btnResetPoster.classList.remove('active');
+  });
+
+  // 채우기(Fill) 버튼
+  btnResetPoster.addEventListener('click', (e) => {
+    e.stopPropagation();
+    resetPosterPan();
+  });
 
   // 폼 요소들
   const signupForm = document.getElementById('signupForm');
@@ -241,6 +317,38 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('detailIntro').textContent = post.intro;
     document.getElementById('detailActivities').textContent = post.activities;
     document.getElementById('detailMembers').textContent = post.members;
+
+    // 포스터 패닝 위치 초기화
+    resetPosterPan();
+
+    // 활동사진 갤러리 렌더링
+    const galleryContainer = document.getElementById('detailPhotoGallery');
+    galleryContainer.innerHTML = '';
+
+    const photoUrls = (post.activity_photos || '')
+      .split(/[,\n]/)
+      .map(url => url.trim())
+      .filter(url => url.startsWith('http://') || url.startsWith('https://'));
+
+    if (photoUrls.length === 0) {
+      galleryContainer.innerHTML = `<p class="empty-photos-text">등록된 동아리 활동사진이 없습니다.</p>`;
+    } else {
+      photoUrls.forEach(url => {
+        const item = document.createElement('div');
+        item.className = 'photo-gallery-item';
+        item.innerHTML = `
+          <img src="${escapeHtml(url)}" alt="동아리 활동사진" onerror="this.parentElement.style.display='none'">
+          <div class="photo-gallery-overlay">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+          </div>
+        `;
+        item.addEventListener('click', () => {
+          lightboxImg.src = url;
+          openModal(photoLightboxModal);
+        });
+        galleryContainer.appendChild(item);
+      });
+    }
 
     // 학생용 지원하기 버튼 설정
     const btnOpenApply = document.getElementById('btnOpenApplyForm');
@@ -494,7 +602,8 @@ document.addEventListener('DOMContentLoaded', () => {
       summary: document.getElementById('newSummary').value.trim(),
       intro: document.getElementById('newIntro').value.trim(),
       activities: document.getElementById('newActivities').value.trim(),
-      members: document.getElementById('newMembers').value.trim()
+      members: document.getElementById('newMembers').value.trim(),
+      activity_photos: document.getElementById('newPhotos') ? document.getElementById('newPhotos').value.trim() : ''
     };
 
     try {

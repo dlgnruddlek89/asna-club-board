@@ -90,7 +90,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
 // 3. 동아리 등록 (조장 전용)
 router.post('/', requireAuth, async (req, res) => {
-  const { club_name, poster_url, category, summary, intro, activities, members } = req.body;
+  const { club_name, poster_url, category, summary, intro, activities, members, activity_photos } = req.body;
 
   if (!club_name || !poster_url || !intro || !activities || !members) {
     return res.status(400).json({
@@ -121,6 +121,7 @@ router.post('/', requireAuth, async (req, res) => {
         intro: intro.trim(),
         activities: activities.trim(),
         members: members.trim(),
+        activity_photos: activity_photos ? activity_photos.trim() : '',
         is_closed: false
       }])
       .select('*')

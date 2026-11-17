@@ -129,12 +129,28 @@
       <button class="modal-close-btn" data-close-modal>&times;</button>
       
       <div class="detail-layout">
-        <!-- 좌측 포스터 영역 -->
-        <div class="detail-poster-wrap">
-          <img id="detailPosterImg" src="" alt="동아리 포스터" class="detail-poster-img" onerror="this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800'">
+        <!-- 좌측 포스터 영역 (마우스 드래그 & 줌 인터랙티브 뷰어) -->
+        <div class="detail-poster-wrap" id="detailPosterWrap" title="마우스로 드래그하여 포스터의 숨겨진 부분을 볼 수 있습니다">
+          <div class="poster-pan-container" id="posterPanContainer">
+            <img id="detailPosterImg" src="" alt="동아리 포스터" class="detail-poster-img" draggable="false" onerror="this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800'">
+          </div>
+          
           <div class="detail-poster-badges">
             <span id="detailCategory" class="badge badge-category">IT/개발</span>
             <span id="detailStatus" class="badge badge-status">모집중</span>
+          </div>
+
+          <!-- 마우스 조작 안내 및 뷰 컨트롤러 -->
+          <div class="poster-view-controls">
+            <span class="poster-pan-hint">🖐️ 마우스 드래그로 이동</span>
+            <div class="poster-ctrl-buttons">
+              <button type="button" id="btnFitPoster" class="btn-poster-ctrl" title="전체 한눈에 보기 (Fit)">
+                전체보기
+              </button>
+              <button type="button" id="btnResetPoster" class="btn-poster-ctrl" title="원래 크기로 채우기 (Fill)">
+                채우기
+              </button>
+            </div>
           </div>
         </div>
 
@@ -165,6 +181,17 @@
                 주요 활동 내용
               </h3>
               <p id="detailActivities" class="section-content text-preserve"></p>
+            </div>
+
+            <!-- 동아리 활동사진 갤러리 섹션 -->
+            <div class="detail-section" id="detailPhotosSection">
+              <h3 class="section-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                동아리 활동사진
+              </h3>
+              <div id="detailPhotoGallery" class="photo-gallery-grid">
+                <!-- 활동사진들이 자바스크립트로 렌더링됩니다 -->
+              </div>
             </div>
 
             <div class="detail-section">
@@ -440,11 +467,27 @@
           <input type="text" id="newMembers" class="form-input" placeholder="예: 이후경(회장), 박지훈, 김민서, 최수아" required>
         </div>
 
+        <div class="form-group">
+          <label for="newPhotos" class="form-label">
+            동아리 활동사진 URL 목록 (선택)
+            <span class="label-hint">(쉼표로 여러 장 구분)</span>
+          </label>
+          <textarea id="newPhotos" class="form-textarea" rows="2" placeholder="https://..., https://... (활동사진 이미지 링크를 쉼표로 구분하여 입력)"></textarea>
+        </div>
+
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" data-close-modal>취소</button>
           <button type="submit" id="btnSubmitCreatePost" class="btn btn-primary btn-block">동아리 모집 공고 등록하기</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 7. 사진 확대 라이트박스 모달 -->
+  <div id="photoLightboxModal" class="modal-backdrop lightbox-backdrop" style="display: none;">
+    <button class="modal-close-btn lightbox-close-btn" data-close-modal>&times;</button>
+    <div class="lightbox-content">
+      <img id="lightboxImg" src="" alt="동아리 활동사진 확대">
     </div>
   </div>
 
