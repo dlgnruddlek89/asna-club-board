@@ -208,8 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const linkToSignup = document.getElementById('linkToSignup');
 
   // 슬라이더 인스턴스 초기화
+  let currentPosterEditPostId = null;
+
   const slider = new CardSlider({
-    onCardClick: (post) => openDetailModal(post)
+    onCardClick: (post) => openDetailModal(post),
+    onEditPoster: (post) => triggerPosterEdit(post)
   });
 
   // ==========================================
@@ -224,6 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       guestNav.style.display = 'flex';
       leaderNav.style.display = 'none';
+    }
+    if (currentPosts && currentPosts.length > 0) {
+      slider.render();
     }
   }
 
@@ -485,12 +491,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 해당 동아리 조장 전용 도구 영역 표시/숨김
     const leaderControls = document.getElementById('leaderDetailControls');
+    const btnEditPosterOverlay = document.getElementById('btnEditPosterOverlay');
+    const btnChangePoster = document.getElementById('btnChangePoster');
+
     if (isOwner) {
       leaderControls.style.display = 'block';
+      if (btnEditPosterOverlay) btnEditPosterOverlay.style.display = 'inline-flex';
+      if (btnChangePoster) btnChangePoster.style.display = 'inline-flex';
       document.getElementById('leaderPendingBadge').textContent = post.pending_count !== undefined ? post.pending_count : (post.application_count || 0);
       document.getElementById('closeToggleText').textContent = isClosed ? '모집 재개하기' : '모집 마감하기';
     } else {
       leaderControls.style.display = 'none';
+      if (btnEditPosterOverlay) btnEditPosterOverlay.style.display = 'none';
+      if (btnChangePoster) btnChangePoster.style.display = 'none';
     }
   }
 
@@ -738,6 +751,83 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInputActivityPhoto.value = '';
     fileInputActivityPhoto.click();
   });
+
+  // 1-1) 조장 전용: 동아리 대표사진(포스터) 변경 및 자르기 트리거 함수
+  function triggerPosterEdit(post) {
+    if (!auth.isLoggedIn()) {
+      showToast('조장 로그인 후 대표사진을 변경할 수 있습니다.', 'error');
+      openModal(loginModal);
+      return;
+    }
+    const currentUser = auth.getUser();
+    if (!post || (post.user_id !== currentUser.id && !post.is_mine)) {
+      showToast('해당 동아리의 조장만 대표사진을 변경할 수 있습니다.', 'error');
+      return;
+    }
+    currentPosterEditPostId = post.id;
+    const fileInput = document.getElementById('fileInputChangePoster');
+    if (fileInput) {
+      fileInput.value = '';
+      fileInput.click();
+    }
+  }
+
+  // 대표사진 변경 버튼들 바인딩
+  const btnEditPosterOverlay = document.getElementById('btnEditPosterOverlay');
+  if (btnEditPosterOverlay) {
+    btnEditPosterOverlay.addEventListener('click', () => {
+      if (currentDetailPost) triggerPosterEdit(currentDetailPost);
+    });
+  }
+
+  const btnChangePoster = document.getElementById('btnChangePoster');
+  if (btnChangePoster) {
+    btnChangePoster.addEventListener('click', () => {
+      if (currentDetailPost) triggerPosterEdit(currentDetailPost);
+    });
+  }
+
+  // 대표사진 파일 선택 시 자르기 모달 열기 & 서버 저장
+  const fileInputChangePoster = document.getElementById('fileInputChangePoster');
+  if (fileInputChangePoster) {
+    fileInputChangePoster.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      openCropper(file, async (croppedDataUrl) => {
+        const targetId = currentPosterEditPostId || (currentDetailPost && currentDetailPost.id);
+        if (!targetId) return;
+
+        try {
+          showToast('대표사진을 저장하는 중...', 'normal');
+          const res = await api.updatePostPoster(targetId, croppedDataUrl);
+          if (res.success) {
+            showToast('동아리 대표사진(포스터)이 성공적으로 변경되었습니다!', 'success');
+
+            // 1) 현재 열린 상세 모달이 있다면 즉시 교체
+            if (currentDetailPost && currentDetailPost.id === targetId) {
+              currentDetailPost.poster_url = croppedDataUrl;
+              const detailPosterImg = document.getElementById('detailPosterImg');
+              if (detailPosterImg) detailPosterImg.src = croppedDataUrl;
+            }
+
+            // 2) 홈 카드 슬라이더 목록 즉시 교체
+            const found = currentPosts.find(p => p.id === targetId);
+            if (found) {
+              found.poster_url = croppedDataUrl;
+              slider.setPosts(currentPosts);
+              localStorage.setItem('cached_club_posts', JSON.stringify(currentPosts));
+            }
+
+            // 3) 백그라운드 동기화
+            await loadPosts();
+          }
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      }, 0.75); // 포스터 3:4 세로 비율 추천 (크롭 모달에서 1:1, 16:9, 자유비율 선택 가능)
+    });
+  }
 
   fileInputActivityPhoto.addEventListener('change', (e) => {
     const file = e.target.files && e.target.files[0];

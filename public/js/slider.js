@@ -15,6 +15,7 @@ class CardSlider {
     this.currentIndex = 0;
     this.items = [];
     this.onCardClick = options.onCardClick || (() => {});
+    this.onEditPoster = options.onEditPoster || null;
 
     this.isDragging = false;
     this.startX = 0;
@@ -54,6 +55,8 @@ class CardSlider {
       slide.dataset.id = post.id;
 
       const isClosed = post.is_closed === 1;
+      const currentUser = (typeof auth !== 'undefined' && auth.getUser) ? auth.getUser() : null;
+      const isOwner = currentUser && (post.user_id === currentUser.id || post.is_mine);
 
       slide.innerHTML = `
         <div class="club-card" role="button" tabindex="0">
@@ -66,9 +69,17 @@ class CardSlider {
                 <span class="badge badge-category">${escapeHtml(post.category || '일반')}</span>
                 ${(post.has_photos || post.activity_photos) ? `<span class="badge badge-photos" style="background:rgba(79,70,229,0.9); color:#fff;">📸 활동사진</span>` : ''}
               </div>
-              <span class="badge badge-status ${isClosed ? 'closed' : ''}">
-                ${isClosed ? '모집마감' : '모집중'}
-              </span>
+              <div style="display:flex; gap:6px; align-items:center;">
+                ${isOwner ? `
+                  <button type="button" class="card-edit-poster-btn" data-post-id="${post.id}" title="대표사진 변경 및 원하는 크기로 자르기">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    사진변경
+                  </button>
+                ` : ''}
+                <span class="badge badge-status ${isClosed ? 'closed' : ''}">
+                  ${isClosed ? '모집마감' : '모집중'}
+                </span>
+              </div>
             </div>
 
             <div class="card-poster-info">
@@ -101,6 +112,16 @@ class CardSlider {
           </div>
         </div>
       `;
+
+      const editPosterBtn = slide.querySelector('.card-edit-poster-btn');
+      if (editPosterBtn) {
+        editPosterBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.onEditPoster) {
+            this.onEditPoster(post);
+          }
+        });
+      }
 
       slide.addEventListener('click', (e) => {
         // 현재 활성 카드가 아닐 때 클릭하면 해당 카드로 이동

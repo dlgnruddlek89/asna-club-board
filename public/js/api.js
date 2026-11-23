@@ -104,6 +104,18 @@ const api = {
       body: JSON.stringify({ photoUrl })
     });
   },
+  updatePostPoster(postId, posterUrl) {
+    return request(`/posts/${postId}/poster`, {
+      method: 'PATCH',
+      body: JSON.stringify({ poster_url: posterUrl })
+    });
+  },
+  updatePost(postId, payload) {
+    return request(`/posts/${postId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+  },
 
   // 지원 신청
   apply(postId, payload) {

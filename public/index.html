@@ -9,7 +9,7 @@
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <!-- Cropper.js for Interactive Image Cropping -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
-  <link rel="stylesheet" href="/css/style.css?v=20261123_2">
+  <link rel="stylesheet" href="/css/style.css?v=20261123_4">
 </head>
 <body>
   <!-- 최상단 헤더 네비게이션 -->
@@ -142,6 +142,13 @@
             <span id="detailStatus" class="badge badge-status">모집중</span>
           </div>
 
+          <!-- 조장 전용: 대표사진(포스터) 변경 & 자르기 버튼 -->
+          <button type="button" id="btnEditPosterOverlay" class="btn-poster-edit-overlay" style="display: none;" title="대표사진을 새로 올리고 원하는 크기로 자를 수 있습니다">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            대표사진 변경 &amp; 자르기
+          </button>
+          <input type="file" id="fileInputChangePoster" accept="image/*" style="display: none;">
+
           <!-- 마우스 조작 안내 및 뷰 컨트롤러 -->
           <div class="poster-view-controls">
             <span class="poster-pan-hint">🖐️ 마우스 드래그로 이동</span>
@@ -229,6 +236,10 @@
                 <button id="btnViewApplications" class="btn btn-secondary">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
                   지원자 명단 관리 (<span id="leaderPendingBadge">0</span>)
+                </button>
+                <button type="button" id="btnChangePoster" class="btn btn-secondary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  대표사진 변경
                 </button>
                 <button id="btnToggleClosePost" class="btn btn-outline">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
@@ -564,8 +575,8 @@
   <!-- 스크립트 로드 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-  <script src="/js/api.js?v=20261123_3"></script>
-  <script src="/js/slider.js?v=20261123_3"></script>
-  <script src="/js/app.js?v=20261123_3"></script>
+  <script src="/js/api.js?v=20261123_4"></script>
+  <script src="/js/slider.js?v=20261123_4"></script>
+  <script src="/js/app.js?v=20261123_4"></script>
 </body>
 </html>

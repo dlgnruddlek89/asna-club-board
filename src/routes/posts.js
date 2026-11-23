@@ -112,10 +112,10 @@ router.post('/', requireAuth, async (req, res) => {
   }
 
   const trimmedUrl = poster_url.trim();
-  if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+  if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://') && !trimmedUrl.startsWith('data:image/')) {
     return res.status(400).json({
       success: false,
-      message: '포스터 URL은 http:// 또는 https:// 로 시작해야 합니다.'
+      message: '포스터는 이미지 URL(http/https) 또는 업로드된 이미지 파일이어야 합니다.'
     });
   }
 
@@ -396,6 +396,109 @@ router.post('/:id/photos', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Add photo error:', err);
     return res.status(500).json({ success: false, message: '활동사진 추가 중 오류가 발생했습니다.' });
+  }
+});
+
+// 9. 동아리 대표사진(포스터) 변경 & 업로드 (해당 조장 전용)
+router.patch('/:id/poster', requireAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  const { poster_url } = req.body;
+
+  if (!poster_url || !poster_url.trim()) {
+    return res.status(400).json({ success: false, message: '변경할 대표사진 데이터가 없습니다.' });
+  }
+
+  const trimmedUrl = poster_url.trim();
+  if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://') && !trimmedUrl.startsWith('data:image/')) {
+    return res.status(400).json({
+      success: false,
+      message: '포스터는 이미지 URL(http/https) 또는 업로드된 이미지 파일이어야 합니다.'
+    });
+  }
+
+  try {
+    const { data: post, error } = await supabase
+      .from('club_posts')
+      .select('id, user_id')
+      .eq('id', postId)
+      .maybeSingle();
+
+    if (error || !post) {
+      return res.status(404).json({ success: false, message: '해당 동아리 모집글을 찾을 수 없습니다.' });
+    }
+
+    if (post.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: '해당 동아리의 조장만 대표사진을 변경할 수 있습니다.' });
+    }
+
+    const { error: updateError } = await supabase
+      .from('club_posts')
+      .update({ poster_url: trimmedUrl })
+      .eq('id', postId);
+
+    if (updateError) {
+      console.error('Update poster error:', updateError);
+      return res.status(500).json({ success: false, message: '대표사진 저장 중 오류가 발생했습니다.' });
+    }
+
+    return res.json({
+      success: true,
+      message: '동아리 대표사진이 성공적으로 변경되었습니다!',
+      poster_url: trimmedUrl
+    });
+  } catch (err) {
+    console.error('Update poster error:', err);
+    return res.status(500).json({ success: false, message: '대표사진 변경 중 오류가 발생했습니다.' });
+  }
+});
+
+// 10. 동아리 정보 전체 수정 (해당 조장 전용)
+router.put('/:id', requireAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  const { club_name, poster_url, category, summary, intro, activities, members, activity_photos } = req.body;
+
+  try {
+    const { data: post, error } = await supabase
+      .from('club_posts')
+      .select('id, user_id')
+      .eq('id', postId)
+      .maybeSingle();
+
+    if (error || !post) {
+      return res.status(404).json({ success: false, message: '해당 동아리를 찾을 수 없습니다.' });
+    }
+
+    if (post.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: '해당 동아리의 조장만 수정할 수 있습니다.' });
+    }
+
+    const updates = {};
+    if (club_name) updates.club_name = club_name.trim();
+    if (poster_url) updates.poster_url = poster_url.trim();
+    if (category) updates.category = category.trim();
+    if (summary !== undefined) updates.summary = summary.trim();
+    if (intro) updates.intro = intro.trim();
+    if (activities) updates.activities = activities.trim();
+    if (members) updates.members = members.trim();
+    if (activity_photos !== undefined) updates.activity_photos = activity_photos.trim();
+
+    const { error: updateError } = await supabase
+      .from('club_posts')
+      .update(updates)
+      .eq('id', postId);
+
+    if (updateError) {
+      console.error('Update post error:', updateError);
+      return res.status(500).json({ success: false, message: '동아리 정보 수정 중 오류가 발생했습니다.' });
+    }
+
+    return res.json({
+      success: true,
+      message: '동아리 정보가 성공적으로 수정되었습니다!'
+    });
+  } catch (err) {
+    console.error('Update post error:', err);
+    return res.status(500).json({ success: false, message: '동아리 정보 수정 중 오류가 발생했습니다.' });
   }
 });
 
