@@ -30,6 +30,107 @@ document.addEventListener('DOMContentLoaded', () => {
   const photoLightboxModal = document.getElementById('photoLightboxModal');
   const lightboxImg = document.getElementById('lightboxImg');
 
+  // 이미지 자르기 (Cropper) 모달 관련 요소
+  const imageCropperModal = document.getElementById('imageCropperModal');
+  const cropperImageElement = document.getElementById('cropperImageElement');
+  const btnApplyCrop = document.getElementById('btnApplyCrop');
+  const btnCropRotateLeft = document.getElementById('btnCropRotateLeft');
+  const btnCropRotateRight = document.getElementById('btnCropRotateRight');
+  const btnCropReset = document.getElementById('btnCropReset');
+
+  // 활동사진 추가 관련 DOM
+  const btnAddActivityPhoto = document.getElementById('btnAddActivityPhoto');
+  const fileInputActivityPhoto = document.getElementById('fileInputActivityPhoto');
+
+  // 동아리 등록 파일 자르기 관련 DOM
+  const btnUploadPosterFile = document.getElementById('btnUploadPosterFile');
+  const fileInputPoster = document.getElementById('fileInputPoster');
+  const btnUploadActivityPhotoFile = document.getElementById('btnUploadActivityPhotoFile');
+  const fileInputCreatePhotos = document.getElementById('fileInputCreatePhotos');
+
+  // Cropper 상태
+  let cropperInstance = null;
+  let onCropCompleteCallback = null;
+
+  function openCropper(file, onComplete, defaultRatio = NaN) {
+    if (!file) return;
+    onCropCompleteCallback = onComplete;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      cropperImageElement.src = e.target.result;
+      openModal(imageCropperModal);
+
+      // 모달 렌더링 후 Cropper 인스턴스 초기화
+      setTimeout(() => {
+        if (cropperInstance) {
+          cropperInstance.destroy();
+        }
+
+        // 비율 버튼 상태 갱신
+        document.querySelectorAll('.btn-crop-tool[data-ratio]').forEach(btn => {
+          const r = parseFloat(btn.dataset.ratio);
+          btn.classList.toggle('active', isNaN(defaultRatio) ? isNaN(r) : Math.abs(r - defaultRatio) < 0.05);
+        });
+
+        cropperInstance = new Cropper(cropperImageElement, {
+          aspectRatio: defaultRatio,
+          viewMode: 1,
+          autoCropArea: 0.9,
+          responsive: true,
+          restore: false
+        });
+      }, 100);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 자르기 비율 버튼 이벤트
+  document.querySelectorAll('.btn-crop-tool[data-ratio]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-crop-tool[data-ratio]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const ratio = parseFloat(btn.dataset.ratio);
+      if (cropperInstance) {
+        cropperInstance.setAspectRatio(ratio);
+      }
+    });
+  });
+
+  // 자르기 회전 및 리셋
+  btnCropRotateLeft.addEventListener('click', () => {
+    if (cropperInstance) cropperInstance.rotate(-90);
+  });
+  btnCropRotateRight.addEventListener('click', () => {
+    if (cropperInstance) cropperInstance.rotate(90);
+  });
+  btnCropReset.addEventListener('click', () => {
+    if (cropperInstance) cropperInstance.reset();
+  });
+
+  // 자르기 완료 버튼
+  btnApplyCrop.addEventListener('click', () => {
+    if (!cropperInstance) return;
+    const canvas = cropperInstance.getCroppedCanvas({
+      maxWidth: 1600,
+      maxHeight: 1600,
+      imageSmoothingQuality: 'high'
+    });
+
+    if (!canvas) {
+      showToast('이미지 자르기에 실패했습니다.', 'error');
+      return;
+    }
+
+    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    closeModal(imageCropperModal);
+
+    if (onCropCompleteCallback) {
+      onCropCompleteCallback(croppedDataUrl);
+      onCropCompleteCallback = null;
+    }
+  });
+
   // 포스터 패닝 인터랙션 변수
   const detailPosterWrap = document.getElementById('detailPosterWrap');
   const posterPanContainer = document.getElementById('posterPanContainer');
@@ -42,29 +143,21 @@ document.addEventListener('DOMContentLoaded', () => {
   let panStartY = 0;
   let currentPanX = 0;
   let currentPanY = 0;
-  let posterScale = 1.15; // 기본 넉넉한 스케일로 잘린 부분 마우스 탐색 용이
+  let posterScale = 1.0;
 
   function applyPosterTransform() {
-    if (detailPosterWrap.classList.contains('fit-mode')) {
-      detailPosterImg.style.transform = 'none';
-      return;
-    }
     detailPosterImg.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${posterScale})`;
   }
 
   function resetPosterPan() {
     currentPanX = 0;
     currentPanY = 0;
-    posterScale = 1.15;
-    detailPosterWrap.classList.remove('fit-mode');
-    btnFitPoster.classList.remove('active');
-    btnResetPoster.classList.add('active');
+    posterScale = 1.0;
     applyPosterTransform();
   }
 
-  // 포스터 마우스 드래그 이벤트 (Pan)
+  // 포스터 마우스 드래그 이벤트 (상하좌우 자유 이동)
   posterPanContainer.addEventListener('mousedown', (e) => {
-    if (detailPosterWrap.classList.contains('fit-mode')) return;
     isPosterPanning = true;
     panStartX = e.clientX - currentPanX;
     panStartY = e.clientY - currentPanY;
@@ -83,25 +176,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 포스터 휠 확대/축소
   posterPanContainer.addEventListener('wheel', (e) => {
-    if (detailPosterWrap.classList.contains('fit-mode')) return;
     e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 0.08 : -0.08;
-    posterScale = Math.min(Math.max(0.8, posterScale + zoomFactor), 3.0);
+    const zoomFactor = e.deltaY < 0 ? 0.1 : -0.1;
+    posterScale = Math.min(Math.max(0.6, posterScale + zoomFactor), 3.5);
     applyPosterTransform();
   }, { passive: false });
 
-  // 전체보기(Fit) 버튼
+  // 전체보기(Fit) 버튼: 1배율 중앙 복귀
   btnFitPoster.addEventListener('click', (e) => {
     e.stopPropagation();
-    detailPosterWrap.classList.add('fit-mode');
-    btnFitPoster.classList.add('active');
-    btnResetPoster.classList.remove('active');
+    resetPosterPan();
   });
 
-  // 채우기(Fill) 버튼
+  // 채우기/확대(Fill) 버튼: 1.5배율로 확대하여 세부 확인
   btnResetPoster.addEventListener('click', (e) => {
     e.stopPropagation();
-    resetPosterPan();
+    currentPanX = 0;
+    currentPanY = 0;
+    posterScale = 1.5;
+    applyPosterTransform();
   });
 
   // 폼 요소들
@@ -325,10 +418,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const galleryContainer = document.getElementById('detailPhotoGallery');
     galleryContainer.innerHTML = '';
 
+    // 조장 전용 활동사진 추가 버튼 표시 여부
+    if (isOwner) {
+      btnAddActivityPhoto.style.display = 'inline-flex';
+    } else {
+      btnAddActivityPhoto.style.display = 'none';
+    }
+
     const photoUrls = (post.activity_photos || '')
       .split(/[,\n]/)
       .map(url => url.trim())
-      .filter(url => url.startsWith('http://') || url.startsWith('https://'));
+      .filter(url => url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image/'));
 
     if (photoUrls.length === 0) {
       galleryContainer.innerHTML = `<p class="empty-photos-text">등록된 동아리 활동사진이 없습니다.</p>`;
@@ -591,6 +691,68 @@ document.addEventListener('DOMContentLoaded', () => {
       box.style.display = 'none';
     }
   }
+
+  // 1) 상세 화면: 조장 전용 활동사진 추가 & 자르기
+  btnAddActivityPhoto.addEventListener('click', () => {
+    fileInputActivityPhoto.value = '';
+    fileInputActivityPhoto.click();
+  });
+
+  fileInputActivityPhoto.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    openCropper(file, async (croppedDataUrl) => {
+      if (!currentDetailPost) return;
+      try {
+        showToast('활동사진을 추가하는 중...', 'normal');
+        const res = await api.addPostPhoto(currentDetailPost.id, croppedDataUrl);
+        if (res.success) {
+          showToast('활동사진이 성공적으로 추가되었습니다!', 'success');
+          currentDetailPost.activity_photos = res.activity_photos;
+          renderDetailModal(currentDetailPost);
+          await loadPosts();
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }, 1.7777777778); // 활동사진 기본 16:9 비율 추천
+  });
+
+  // 2) 동아리 등록 화면: 내 컴퓨터 포스터 사진 파일 선택 & 자르기
+  btnUploadPosterFile.addEventListener('click', () => {
+    fileInputPoster.value = '';
+    fileInputPoster.click();
+  });
+
+  fileInputPoster.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    openCropper(file, (croppedDataUrl) => {
+      document.getElementById('newPosterUrl').value = croppedDataUrl;
+      updatePosterPreview(croppedDataUrl);
+      showToast('포스터 사진이 크기에 맞게 잘려서 적용되었습니다!', 'success');
+    }, 0.75); // 포스터 3:4 세로 비율 추천
+  });
+
+  // 3) 동아리 등록 화면: 내 컴퓨터 활동사진 파일 선택 & 자르기
+  btnUploadActivityPhotoFile.addEventListener('click', () => {
+    fileInputCreatePhotos.value = '';
+    fileInputCreatePhotos.click();
+  });
+
+  fileInputCreatePhotos.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    openCropper(file, (croppedDataUrl) => {
+      const textarea = document.getElementById('newPhotos');
+      const current = textarea.value.trim();
+      textarea.value = current ? current + '\n' + croppedDataUrl : croppedDataUrl;
+      showToast('활동사진이 크기에 맞게 잘려서 추가되었습니다!', 'success');
+    }, 1.7777777778); // 활동사진 16:9 와이드 추천
+  });
 
   // 동아리 등록 폼 제출
   createPostForm.addEventListener('submit', async (e) => {

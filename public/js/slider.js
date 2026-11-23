@@ -62,7 +62,10 @@ class CardSlider {
             <div class="card-overlay-gradient"></div>
             
             <div class="card-header-meta">
-              <span class="badge badge-category">${escapeHtml(post.category || '일반')}</span>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <span class="badge badge-category">${escapeHtml(post.category || '일반')}</span>
+                ${post.activity_photos ? `<span class="badge badge-photos" style="background:rgba(79,70,229,0.9); color:#fff;">📸 활동사진</span>` : ''}
+              </div>
               <span class="badge badge-status ${isClosed ? 'closed' : ''}">
                 ${isClosed ? '모집마감' : '모집중'}
               </span>

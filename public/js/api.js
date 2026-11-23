@@ -98,6 +98,12 @@ const api = {
   deletePost(id) {
     return request(`/posts/${id}`, { method: 'DELETE' });
   },
+  addPostPhoto(postId, photoUrl) {
+    return request(`/posts/${postId}/photos`, {
+      method: 'POST',
+      body: JSON.stringify({ photoUrl })
+    });
+  },
 
   // 지원 신청
   apply(postId, payload) {

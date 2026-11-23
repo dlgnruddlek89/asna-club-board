@@ -333,4 +333,58 @@ router.get('/:id/applications', requireAuth, async (req, res) => {
   }
 });
 
+// 8. 동아리 활동사진 추가 (해당 조장 전용)
+router.post('/:id/photos', requireAuth, async (req, res) => {
+  const postId = Number(req.params.id);
+  const { photoUrl } = req.body;
+
+  if (!photoUrl) {
+    return res.status(400).json({ success: false, message: '추가할 사진 데이터가 없습니다.' });
+  }
+
+  try {
+    const { data: post, error } = await supabase
+      .from('club_posts')
+      .select('id, user_id, activity_photos')
+      .eq('id', postId)
+      .maybeSingle();
+
+    if (error || !post) {
+      return res.status(404).json({ success: false, message: '동아리를 찾을 수 없습니다.' });
+    }
+
+    if (post.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: '해당 동아리의 조장만 활동사진을 추가할 수 있습니다.' });
+    }
+
+    const currentPhotos = (post.activity_photos || '')
+      .split('\n')
+      .map(p => p.trim())
+      .filter(Boolean);
+
+    // 새 사진 추가
+    currentPhotos.push(photoUrl.trim());
+    const updatedPhotosStr = currentPhotos.join('\n');
+
+    const { error: updateError } = await supabase
+      .from('club_posts')
+      .update({ activity_photos: updatedPhotosStr })
+      .eq('id', postId);
+
+    if (updateError) {
+      console.error('Update photos error:', updateError);
+      return res.status(500).json({ success: false, message: '활동사진 저장 중 오류가 발생했습니다.' });
+    }
+
+    return res.json({
+      success: true,
+      message: '동아리 활동사진이 성공적으로 추가되었습니다!',
+      activity_photos: updatedPhotosStr
+    });
+  } catch (err) {
+    console.error('Add photo error:', err);
+    return res.status(500).json({ success: false, message: '활동사진 추가 중 오류가 발생했습니다.' });
+  }
+});
+
 module.exports = router;
