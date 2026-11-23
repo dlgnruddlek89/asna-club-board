@@ -228,24 +228,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadPosts() {
+    // 1) 이전 캐시가 있으면 로딩 대기 없이 0초 만에 화면에 즉시 표시!
+    const cached = localStorage.getItem('cached_club_posts');
+    if (cached && currentPosts.length === 0) {
+      try {
+        currentPosts = JSON.parse(cached);
+        slider.setPosts(currentPosts);
+      } catch (e) {}
+    }
+
+    // 2) 백그라운드에서 최신 데이터 가져와 갱신
     try {
       const res = await api.getPosts();
       if (res.success) {
         currentPosts = res.posts;
         slider.setPosts(currentPosts);
+        localStorage.setItem('cached_club_posts', JSON.stringify(currentPosts));
 
         // 상세 모달이 열려 있는 상태라면 상세 정보도 최신화
         if (currentDetailPost && detailModal.style.display === 'flex') {
           const updated = currentPosts.find(p => p.id === currentDetailPost.id);
           if (updated) {
-            currentDetailPost = updated;
-            renderDetailModal(updated);
+            currentDetailPost = { ...currentDetailPost, ...updated };
+            renderDetailModal(currentDetailPost);
           }
         }
       }
     } catch (err) {
       console.error(err);
-      showToast('동아리 목록을 불러오지 못했습니다.', 'error');
+      if (currentPosts.length === 0) {
+        showToast('동아리 목록을 불러오지 못했습니다.', 'error');
+      }
     }
   }
 
@@ -381,10 +394,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 4. 동아리 상세 화면 (PRD: 소개글, 활동 내용, 회원 이름, 신청 버튼)
   // ==========================================
-  function openDetailModal(post) {
+  async function openDetailModal(post) {
     currentDetailPost = post;
     renderDetailModal(post);
     openModal(detailModal);
+
+    // 상세 내용(활동사진 및 상세 본문) 비동기 보강
+    try {
+      const res = await api.getPost(post.id);
+      if (res.success && res.post) {
+        currentDetailPost = res.post;
+        renderDetailModal(res.post);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function renderDetailModal(post) {
@@ -418,12 +442,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const galleryContainer = document.getElementById('detailPhotoGallery');
     galleryContainer.innerHTML = '';
 
-    // 조장 전용 활동사진 추가 버튼 표시 여부
-    if (isOwner) {
-      btnAddActivityPhoto.style.display = 'inline-flex';
-    } else {
-      btnAddActivityPhoto.style.display = 'none';
-    }
+    // 활동사진 추가 버튼 항상 표시 (비로그인 시 로그인 유도)
+    btnAddActivityPhoto.style.display = 'inline-flex';
 
     const photoUrls = (post.activity_photos || '')
       .split(/[,\n]/)
@@ -673,13 +693,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 미리보기 버튼
-  document.getElementById('btnPreviewPoster').addEventListener('click', () => {
-    const url = document.getElementById('newPosterUrl').value.trim();
-    if (url) {
+  // 포스터 URL 입력 시 실시간 미리보기
+  const inputPoster = document.getElementById('newPosterUrl');
+  if (inputPoster) {
+    inputPoster.addEventListener('input', () => {
+      const url = inputPoster.value.trim();
       updatePosterPreview(url);
-    }
-  });
+    });
+  }
+
+  const btnPreviewPoster = document.getElementById('btnPreviewPoster');
+  if (btnPreviewPoster) {
+    btnPreviewPoster.addEventListener('click', () => {
+      const url = document.getElementById('newPosterUrl').value.trim();
+      if (url) {
+        updatePosterPreview(url);
+      }
+    });
+  }
 
   function updatePosterPreview(url) {
     const box = document.getElementById('posterPreviewContainer');
@@ -692,8 +723,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 1) 상세 화면: 조장 전용 활동사진 추가 & 자르기
+  // 1) 상세 화면: 조장 활동사진 추가 & 자르기
   btnAddActivityPhoto.addEventListener('click', () => {
+    if (!auth.isLoggedIn()) {
+      showToast('조장 로그인 후 활동사진을 추가할 수 있습니다.', 'error');
+      openModal(loginModal);
+      return;
+    }
+    const currentUser = auth.getUser();
+    if (!currentDetailPost || (currentDetailPost.user_id !== currentUser.id && !currentDetailPost.is_mine)) {
+      showToast('해당 동아리의 조장만 활동사진을 추가할 수 있습니다.', 'error');
+      return;
+    }
     fileInputActivityPhoto.value = '';
     fileInputActivityPhoto.click();
   });

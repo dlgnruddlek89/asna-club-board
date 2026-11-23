@@ -58,13 +58,13 @@ class CardSlider {
       slide.innerHTML = `
         <div class="club-card" role="button" tabindex="0">
           <div class="card-poster-area">
-            <img class="card-poster-img" src="${post.poster_url}" alt="${post.club_name} 포스터" onerror="this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800'">
+            <img class="card-poster-img" src="${post.poster_url}" alt="${post.club_name} 포스터" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800'">
             <div class="card-overlay-gradient"></div>
             
             <div class="card-header-meta">
               <div style="display:flex; gap:6px; align-items:center;">
                 <span class="badge badge-category">${escapeHtml(post.category || '일반')}</span>
-                ${post.activity_photos ? `<span class="badge badge-photos" style="background:rgba(79,70,229,0.9); color:#fff;">📸 활동사진</span>` : ''}
+                ${(post.has_photos || post.activity_photos) ? `<span class="badge badge-photos" style="background:rgba(79,70,229,0.9); color:#fff;">📸 활동사진</span>` : ''}
               </div>
               <span class="badge badge-status ${isClosed ? 'closed' : ''}">
                 ${isClosed ? '모집마감' : '모집중'}
